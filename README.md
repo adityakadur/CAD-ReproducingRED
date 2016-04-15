@@ -17,4 +17,4 @@ Primary response
 Opcode: 00000011
 
 Secondary response
-Opcode: 00000100
+Opcode: 00000100 (maybe not required)
