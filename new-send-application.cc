@@ -30,7 +30,7 @@
 #include "ns3/trace-source-accessor.h"
 #include "ns3/tcp-socket-factory.h"
 #include "new-send-application.h"
-#include "New-send-application.h""
+#include "bulk-send-application.h"
 
 namespace ns3 {
 
@@ -131,20 +131,37 @@ void NewSendApplication::StartApplication (void) // Called at time specified by 
 
       if (Inet6SocketAddress::IsMatchingType (m_peer))
         {
-          m_socket->Bind6 ();
+          m_socket->Bind6 (m_local);
         }
       else if (InetSocketAddress::IsMatchingType (m_peer))
         {
-          m_socket->Bind ();
+          m_socket->Bind (m_local);
         }
 
-      m_socket->Connect (m_peer);
-      m_socket->ShutdownRecv ();
-      m_socket->SetConnectCallback (
-        MakeCallback (&NewSendApplication::ConnectionSucceeded, this),
-        MakeCallback (&NewSendApplication::ConnectionFailed, this));
-      m_socket->SetSendCallback (
-        MakeCallback (&NewSendApplication::DataSend, this));
+      // m_socket->Connect (m_peer);
+      // m_socket->ShutdownRecv ();
+
+      //NewSendApplication will wait for connection requests from browsers and add them to a queue  
+      m_socket->Listen ();
+      m_socket->SetAcceptCallback (
+        MakeNullCallback<bool, Ptr<Socket>, const Address &> (),
+        MakeCallback (&NewSendApplication::HandleAccept, this));
+
+      //Added a recv callback here. We will read this packet to know how much data to send.
+      m_socket->SetRecvCallback (MakeCallback (&NewSendApplication::HandleRead, this));
+
+      m_socket->SetCloseCallbacks (
+        MakeCallback (&NewSendApplication::HandlePeerClose, this),
+        MakeCallback (&NewSendApplication::HandlePeerError, this));
+
+
+      // m_socket->SetConnectCallback (
+      //   MakeCallback (&NewSendApplication::ConnectionSucceeded, this),
+      //   MakeCallback (&NewSendApplication::ConnectionFailed, this));
+
+      
+      // m_socket->SetSendCallback (
+        // MakeCallback (&NewSendApplication::DataSend, this));
     }
   if (m_connected)
     {
@@ -211,7 +228,7 @@ void NewSendApplication::ConnectionSucceeded (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("NewSendApplication Connection succeeded");
   m_connected = true;
-  SendData ();
+  // SendData ();
 }
 
 void NewSendApplication::ConnectionFailed (Ptr<Socket> socket)
@@ -230,6 +247,63 @@ void NewSendApplication::DataSend (Ptr<Socket>, uint32_t)
     }
 }
 
+std::list<Ptr<Socket> >
+NewSendApplication::GetAcceptedSockets (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_socketList;
+}
 
+void NewSendApplication::HandleAccept (Ptr<Socket> s, const Address& from)
+{
+  NS_LOG_FUNCTION (this << s << from);
+  // s->SetRecvCallback (MakeCallback (&NewPacketSink::HandleRead, this));
+  m_socketList.push_back (s);
+}
+
+void NewSendApplication::HandlePeerClose (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+}
+
+void NewSendApplication::HandlePeerError (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+}
+
+void NewSendApplication::HandleRead (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+  Ptr<Packet> packet;
+  Address from;
+  while ((packet = socket->RecvFrom (from)))
+    {
+      if (packet->GetSize () == 0)
+        { //EOF
+          break;
+        }
+      m_totalRx += packet->GetSize ();
+      if (InetSocketAddress::IsMatchingType (from))
+        {
+          // Read payload to find out how much data to send
+          // Create a BulkSendApplication here to send the requested amount of data to the Address "from"
+          NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
+                       << "s packet sink received "
+                       <<  packet->GetSize () << " bytes from "
+                       << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
+                       << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
+                       << " total Rx " << m_totalRx << " bytes");
+        }
+      else if (Inet6SocketAddress::IsMatchingType (from))
+        {
+          NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
+                       << "s packet sink received "
+                       <<  packet->GetSize () << " bytes from "
+                       << Inet6SocketAddress::ConvertFrom(from).GetIpv6 ()
+                       << " port " << Inet6SocketAddress::ConvertFrom (from).GetPort ()
+                       << " total Rx " << m_totalRx << " bytes");
+        }
+    }
+}
 
 } // Namespace ns3

@@ -113,7 +113,9 @@ private:
   void SendData ();
 
   Ptr<Socket>     m_socket;       //!< Associated socket
+  std::list<Ptr<Socket> > m_socketList; //!< the accepted sockets
   Address         m_peer;         //!< Peer address
+  Address         m_local;        //!< Local address to bind to
   bool            m_connected;    //!< True if connected
   uint32_t        m_sendSize;     //!< Size of data to send each time
   uint32_t        m_maxBytes;     //!< Limit total number of bytes sent
@@ -138,6 +140,8 @@ private:
    * \brief Send more data as soon as some has been transmitted.
    */
   void DataSend (Ptr<Socket>, uint32_t); // for socket's SetSendCallback
+  std::list<Ptr<Socket> > GetAcceptedSockets (void) const;
+  void HandleAccept (Ptr<Socket> socket, const Address& from);
 };
 
 } // namespace ns3
