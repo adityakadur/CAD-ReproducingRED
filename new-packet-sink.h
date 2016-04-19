@@ -1,4 +1,3 @@
-
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright 2007 University of Washington
@@ -18,6 +17,8 @@
  *
  * Author:  Tom Henderson (tomhend@u.washington.edu)
  */
+
+ // This is the web server
 
 #ifndef NEW_PACKET_SINK_H
 #define NEW_PACKET_SINK_H

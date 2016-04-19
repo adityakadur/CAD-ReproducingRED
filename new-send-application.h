@@ -1,4 +1,3 @@
-
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 Georgia Institute of Technology
@@ -35,7 +34,7 @@ class Socket;
 
 /**
  * \ingroup applications
- * \defgroup Newsend NewSendApplication
+ * \defgroup newsend NewSendApplication
  *
  * This traffic generator simply sends data
  * as fast as possible up to MaxBytes or until
@@ -50,7 +49,7 @@ class Socket;
  */
 
 /**
- * \ingroup Newsend
+ * \ingroup newsend
  *
  * \brief Send as much traffic as possible, trying to fill the bandwidth.
  *
@@ -113,9 +112,7 @@ private:
   void SendData ();
 
   Ptr<Socket>     m_socket;       //!< Associated socket
-  std::list<Ptr<Socket> > m_socketList; //!< the accepted sockets
   Address         m_peer;         //!< Peer address
-  Address         m_local;        //!< Local address to bind to
   bool            m_connected;    //!< True if connected
   uint32_t        m_sendSize;     //!< Size of data to send each time
   uint32_t        m_maxBytes;     //!< Limit total number of bytes sent
@@ -140,8 +137,6 @@ private:
    * \brief Send more data as soon as some has been transmitted.
    */
   void DataSend (Ptr<Socket>, uint32_t); // for socket's SetSendCallback
-  std::list<Ptr<Socket> > GetAcceptedSockets (void) const;
-  void HandleAccept (Ptr<Socket> socket, const Address& from);
 };
 
 } // namespace ns3
