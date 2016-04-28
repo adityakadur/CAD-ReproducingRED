@@ -30,6 +30,8 @@
 #include "ns3/trace-source-accessor.h"
 #include "ns3/tcp-socket-factory.h"
 #include "new-send-application.h"
+#include <cstdio>
+#include <cstdlib>
 
 namespace ns3 {
 
@@ -208,6 +210,7 @@ void NewSendApplication::SendData (void)
   }
 
   // First packet contains opcode 1,resp_size (total 5 bytes)
+  printf("Sending req for %d bytes with opcode 1i\n", (int) request_size);
   create_packet_payload(resp_size, opcode, buffer, toSend);
   Ptr<Packet> packet = Create<Packet> (buffer, toSend);
   int actual = m_socket->Send (packet);
@@ -228,6 +231,7 @@ void NewSendApplication::SendData (void)
       NS_LOG_LOGIC ("sending packet at " << Simulator::Now ());
       Ptr<Packet> packet = Create<Packet> (toSend);
       m_txTrace (packet);
+      printf("Sending 1 more packet. %d bytes sent so far \n", (int) m_totBytes);
       int actual = m_socket->Send (packet);
       if (actual > 0)
         {
@@ -242,7 +246,7 @@ void NewSendApplication::SendData (void)
         }
     }
   // Loop till we receive the full primary response. The response_bytes counter is incremented by the recv callback
-  // while(response_bytes < resp_size) {}
+   // while(response_bytes < resp_size) {}
 
 
 
