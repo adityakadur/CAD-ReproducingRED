@@ -118,6 +118,8 @@ private:
   uint32_t        m_maxBytes;     //!< Limit total number of bytes sent
   uint32_t        m_totBytes;     //!< Total bytes sent so far
   TypeId          m_tid;          //!< The type of protocol to use.
+  uint32_t        resp_size;      // Response should be of ths size
+  uint32_t        response_bytes; // Total bytes of response received so far
 
   /// Traced Callback: sent packets
   TracedCallback<Ptr<const Packet> > m_txTrace;

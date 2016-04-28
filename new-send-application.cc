@@ -185,16 +185,14 @@ void create_packet_payload(uint32_t input, uint8_t opcode, uint8_t* buffer, uint
 void NewSendApplication::SendData (void)
 {
   NS_LOG_FUNCTION (this);
-  uint32_t request_size = 500;    // Use CDF to calculate
-  uint32_t resp_size = 500;       // Use CDF to calculate
-  uint32_t num_files = 5;         // USE CDF
+  uint32_t request_size = m_maxBytes;
   uint32_t toSend = m_sendSize;
   uint8_t *buffer = new uint8_t[toSend];
   // Opcodes 
   // 0: extra data. don't read the rest of the packet. 
   // 1: primary request
-  // 2: secondary request
-  uint8_t opcode = type;  
+
+  uint8_t opcode = 1;  
   if(request_size < 5)
   {
     request_size = 5;
@@ -203,15 +201,14 @@ void NewSendApplication::SendData (void)
   {
     toSend = request_size;
   }
-  m_maxBytes = request_size;
 
   // First packet contains opcode 1,resp_size (total 5 bytes)
-  int32toint8(resp_size, opcode, buffer, toSend);
+  create_packet_payload(resp_size, opcode, buffer, toSend);
   Ptr<Packet> packet = Create<Packet> (buffer, toSend);
   int actual = m_socket->Send (packet);
   if (actual > 0)
   {
-    m_totBytes += actual;
+    m_totBytes. += actual;
   }        
   
 
@@ -241,10 +238,7 @@ void NewSendApplication::SendData (void)
     }
   // Loop till we receive the full primary response. The response_bytes counter is incremented by the recv callback
   while(response_bytes < resp_size) {}
-  if(type = 1)          // Primary request
-  {
 
-  }  
 
 
   // Check if time to close (all sent)
