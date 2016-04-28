@@ -177,7 +177,7 @@ void create_packet_payload(uint32_t input, uint8_t opcode, uint8_t* buffer, uint
       buffer[i] = input%256;
       input /= 256;
   } 
-  for (int i = 5; i < buffer_size; i++)
+  for (uint32_t i = 5; i < buffer_size; i++)
   {
     buffer[i] = 0;
   }   
@@ -185,6 +185,11 @@ void create_packet_payload(uint32_t input, uint8_t opcode, uint8_t* buffer, uint
 void NewSendApplication::SendData (void)
 {
   NS_LOG_FUNCTION (this);
+  //Remove this later
+  m_maxBytes = 5000;
+  resp_size = 8000;
+
+
   uint32_t request_size = m_maxBytes;
   uint32_t toSend = m_sendSize;
   uint8_t *buffer = new uint8_t[toSend];
@@ -208,7 +213,7 @@ void NewSendApplication::SendData (void)
   int actual = m_socket->Send (packet);
   if (actual > 0)
   {
-    m_totBytes. += actual;
+    m_totBytes += actual;
   }        
   
 
@@ -263,15 +268,15 @@ void NewSendApplication::ConnectionFailed (Ptr<Socket> socket)
   NS_LOG_LOGIC ("NewSendApplication, Connection Failed");
 }
 
-// void NewSendApplication::DataSend (Ptr<Socket>, uint32_t)
-// {
-//   NS_LOG_FUNCTION (this);
+void NewSendApplication::DataSend (Ptr<Socket>, uint32_t)
+{
+  NS_LOG_FUNCTION (this);
 
-//   if (m_connected)
-//     { // Only send new data if the connection has completed
-//       SendData ();
-//     }
-// }
+  if (m_connected)
+    { // Only send new data if the connection has completed
+      SendData ();
+    }
+}
 
 
 
