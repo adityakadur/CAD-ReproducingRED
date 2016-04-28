@@ -242,7 +242,7 @@ void NewSendApplication::SendData (void)
         }
     }
   // Loop till we receive the full primary response. The response_bytes counter is incremented by the recv callback
-  while(response_bytes < resp_size) {}
+  // while(response_bytes < resp_size) {}
 
 
 

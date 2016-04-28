@@ -51,7 +51,7 @@ int main (int argc, char *argv[])
 
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-  Simulator::Stop(Seconds(30));
+  Simulator::Stop(Seconds(10));
   Simulator::Run ();
   Simulator::Destroy ();
 }
