@@ -173,6 +173,7 @@ void NewPacketSink::HandleRead (Ptr<Socket> socket)
           break;
         }
       m_totalRx += packet->GetSize ();
+
       if (InetSocketAddress::IsMatchingType (from))
         {
           NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
@@ -191,7 +192,29 @@ void NewPacketSink::HandleRead (Ptr<Socket> socket)
                        << " port " << Inet6SocketAddress::ConvertFrom (from).GetPort ()
                        << " total Rx " << m_totalRx << " bytes");
         }
+
+      uint8_t* packet_contents = (uint8_t *) malloc(sizeof(uint8_t) * 5);
+      uint8_t* opcode = (uint8_t *) malloc(sizeof(uint8_t));
+
+      /* Read opcode*/
+      packet->CopyData(opcode, 1);
+
+      switch(packet_contents[0]){
+        case 0: // Ignore
+                NS_LOG_INFO("Received Opcode: 0");
+                break;
+        case 1: /* Read response size */
+                NS_LOG_INFO("Received Opcode: 1");
+                packet->CopyData(packet_contents, 5);
+                uint32_t* response_size = (uint32_t *)(&packet_contents[1]);
+                NS_LOG_INFO("Read response size: "<<*response_size);
+                break;
+      }
+
       m_rxTrace (packet, from);
+
+      free(packet_contents);
+      free(opcode);
     }
 }
 
