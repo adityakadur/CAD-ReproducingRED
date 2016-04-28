@@ -19,6 +19,8 @@ ECE 6110 Project 2
 #include "ns3/packet-sink.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/point-to-point-layout-module.h"
+#include "ns3/new-packet-sink-helper.h"
+#include "ns3/new-send-helper.h"
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -100,8 +102,6 @@ int main (int argc, char *argv[])
   cmd.AddValue ("redMinTh", "RED queue minimum threshold", minTh);
   cmd.AddValue ("redMaxTh", "RED queue maximum threshold", maxTh);
   cmd.Parse (argc,argv);
-
-  // goodput_file = to_string(queue) + "_" + to_string(segSize) + "_" + to_string(bottleNeckLinkBw) + "_" + to_string(bottleNeckLinkDelay) + "_" + to_string(num_apps)+"_" + to_string
 
   Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue (segSize));
   Config::SetDefault("ns3::TcpSocketBase::MaxWindowSize", UintegerValue(maxWin));
@@ -243,7 +243,6 @@ int main (int argc, char *argv[])
   uint16_t port;
   int source;
   int destination;
-  int temp_dest;
 
   double time_interval = 20.0;
   for(uint16_t i = 0; i < num_apps; i++)
@@ -263,10 +262,10 @@ int main (int argc, char *argv[])
     current_dest.port = port; 
     used_addresses.insert(current_dest);
 
-    PacketSinkHelper sink ("ns3::TcpSocketFactory",
+    NewPacketSinkHelper sink ("ns3::TcpSocketFactory",
                           InetSocketAddress (Ipv4Address::GetAny (), current_dest.port));
     sinkApps.Add (sink.Install(csmaNodes2.Get(destination)));
-    BulkSendHelper tcp_source("ns3::TcpSocketFactory",
+    NewSendHelper tcp_source("ns3::TcpSocketFactory",
                          InetSocketAddress (csmaInterfaces2.GetAddress(destination), current_dest.port));
     ApplicationContainer sourceApps = tcp_source.Install (csmaNodes1.Get(source));
     sourceApps.Start(Seconds(start[i]));
@@ -293,8 +292,6 @@ int main (int argc, char *argv[])
     Ptr <PacketSink> pktSink = DynamicCast <PacketSink> (app);
     double rxBytes = pktSink->GetTotalRx();
     totalRxBytesCounter += rxBytes;
-    while(type[index] >= 9.0)
-      index++;
     double goodput = rxBytes/(end[index] - start[index]);
     index++;
     average_goodput_tcp += goodput;
@@ -302,8 +299,6 @@ int main (int argc, char *argv[])
   
 
   average_goodput = (average_goodput_tcp)/num_apps;
-  double bottleneck_goodput = totalRxBytesCounter/stop;
-
 
   Simulator::Destroy ();
   fgoodput.close();
