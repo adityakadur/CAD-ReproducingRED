@@ -138,12 +138,13 @@ void NewSendApplication::StartApplication (void) // Called at time specified by 
         }
 
       m_socket->Connect (m_peer);
-      m_socket->ShutdownRecv ();
+      // m_socket->ShutdownRecv ();
       m_socket->SetConnectCallback (
         MakeCallback (&NewSendApplication::ConnectionSucceeded, this),
         MakeCallback (&NewSendApplication::ConnectionFailed, this));
       m_socket->SetSendCallback (
         MakeCallback (&NewSendApplication::DataSend, this));
+      //Need to add receive callback here. Checks opcode and increments the response_bytes counter. Once we receive resp_size amount of data, the application will send the secondary reqs
     }
   if (m_connected)
     {
@@ -168,14 +169,55 @@ void NewSendApplication::StopApplication (void) // Called at time specified by S
 
 
 // Private helpers
-
+void create_packet_payload(uint32_t input, uint8_t opcode, uint8_t* buffer, uint32_t buffer_size)
+{
+  buffer[0] = opcode;
+  for(int i = 4; i >= 1; i--)
+  {
+      buffer[i] = input%256;
+      input /= 256;
+  } 
+  for (int i = 5; i < buffer_size; i++)
+  {
+    buffer[i] = 0;
+  }   
+}
 void NewSendApplication::SendData (void)
 {
   NS_LOG_FUNCTION (this);
+  uint32_t request_size = 500;    // Use CDF to calculate
+  uint32_t resp_size = 500;       // Use CDF to calculate
+  uint32_t num_files = 5;         // USE CDF
+  uint32_t toSend = m_sendSize;
+  uint8_t *buffer = new uint8_t[toSend];
+  // Opcodes 
+  // 0: extra data. don't read the rest of the packet. 
+  // 1: primary request
+  // 2: secondary request
+  uint8_t opcode = type;  
+  if(request_size < 5)
+  {
+    request_size = 5;
+  }
+  if(request_size < toSend)
+  {
+    toSend = request_size;
+  }
+  m_maxBytes = request_size;
+
+  // First packet contains opcode 1,resp_size (total 5 bytes)
+  int32toint8(resp_size, opcode, buffer, toSend);
+  Ptr<Packet> packet = Create<Packet> (buffer, toSend);
+  int actual = m_socket->Send (packet);
+  if (actual > 0)
+  {
+    m_totBytes += actual;
+  }        
+  
 
   while (m_maxBytes == 0 || m_totBytes < m_maxBytes)
     { // Time to send more
-      uint32_t toSend = m_sendSize;
+      
       // Make sure we don't send too many
       if (m_maxBytes > 0)
         {
@@ -197,8 +239,16 @@ void NewSendApplication::SendData (void)
           break;
         }
     }
+  // Loop till we receive the full primary response. The response_bytes counter is incremented by the recv callback
+  while(response_bytes < resp_size) {}
+  if(type = 1)          // Primary request
+  {
+
+  }  
+
+
   // Check if time to close (all sent)
-  if (m_totBytes == m_maxBytes && m_connected)
+  if (m_connected)
     {
       m_socket->Close ();
       m_connected = false;
@@ -219,15 +269,15 @@ void NewSendApplication::ConnectionFailed (Ptr<Socket> socket)
   NS_LOG_LOGIC ("NewSendApplication, Connection Failed");
 }
 
-void NewSendApplication::DataSend (Ptr<Socket>, uint32_t)
-{
-  NS_LOG_FUNCTION (this);
+// void NewSendApplication::DataSend (Ptr<Socket>, uint32_t)
+// {
+//   NS_LOG_FUNCTION (this);
 
-  if (m_connected)
-    { // Only send new data if the connection has completed
-      SendData ();
-    }
-}
+//   if (m_connected)
+//     { // Only send new data if the connection has completed
+//       SendData ();
+//     }
+// }
 
 
 
